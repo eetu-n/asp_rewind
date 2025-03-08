@@ -2,16 +2,16 @@ import pyaudio
 import numpy as np
 
 class AudioOutput:
-    def __init__(self, fs, chunk_size, channels):
+    def __init__(self, fs, block_length, channels):
         self.fs = fs
-        self.chunk_size = chunk_size
+        self.block_length = block_length
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(
             format=pyaudio.paInt16,
             channels=channels,
             rate=self.fs,
             output=True,
-            frames_per_buffer=self.chunk_size)
+            frames_per_buffer=self.block_length)
         self.stream.start_stream()
 
     def close(self):
@@ -19,9 +19,9 @@ class AudioOutput:
         self.stream.close()
         self.p.terminate()
     
-    def write(self, chunk):
-        if len(chunk) > self.chunk_size:
-            raise ValueError("Chunk length is " + len(chunk) + "\nShould be " + self.chunk_size)
-        if type(chunk[0]) == np.float64:
-            chunk = (chunk * 32767).astype(np.int16)
-        self.stream.write(chunk.tobytes(), self.chunk_size)
+    def write(self, block):
+        if len(block) > self.block_length:
+            raise ValueError("Provided block is of length " + len(block) + "\nShould be <= " + self.block_length)
+        if type(block[0]) == np.float64:
+            block = (block * 32767).astype(np.int16)
+        self.stream.write(block.tobytes(), self.block_length)
