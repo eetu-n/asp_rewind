@@ -3,7 +3,7 @@ import numpy as np
 
 import threading
 
-BLOCK_LENGTH = 1024
+CHUNK = 1024
 fs = 44100
 
 def input_loop(player):
@@ -20,10 +20,26 @@ def output_loop(out, data, player):
     n = 0
     while n < len(data):
         if player.play:
-            out.write(data[n:n+BLOCK_LENGTH])
-            n += BLOCK_LENGTH
+            out.write(data[n:n+CHUNK])
+            n += CHUNK
         if player.done:
             break
+
+# For getting signal from Processor, recursive
+# Not used yet
+def play_processor(out, processor, player):
+    signal_out = processor.play()
+    if signal_out == []:
+        player.stop()
+        return
+    
+    if player.play:
+        out.write(signal_out)
+
+    if player.done:
+        return
+    
+    output_loop(out, processor, player)   
 
 class Player:
     def __init__(self):
@@ -45,7 +61,7 @@ length = 10
 samples = np.linspace(0, length, int(fs*length))
 signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
 
-out = AudioOutput(fs, BLOCK_LENGTH, 1)
+out = AudioOutput(fs, CHUNK, 1)
 
 t2 = threading.Thread(target=output_loop, args=(out, signal, player))
 t2.start()
