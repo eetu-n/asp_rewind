@@ -1,17 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-import numpy as np
 import threading
 
 from AudioOutput import AudioOutput
-
-FS = 44100
-BS = 1024
-CHANNELS = 1
-
-length = 10
-samples = np.linspace(0, length, int(FS*length))
-signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
 
 class Player:
     def __init__(self, signal, output):
@@ -56,6 +47,3 @@ class Player:
         self.playPause_button.pack()
         self.ot.start()
         self.root.mainloop()
-
-out = AudioOutput(FS, BS, CHANNELS)
-player = Player(signal, out)
