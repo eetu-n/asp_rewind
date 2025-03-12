@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 
-from AudioOutput import AudioOutput
-
 class Player:
     def __init__(self, signal, output, enable_gui = True):
         self.signal = signal

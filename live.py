@@ -1,5 +1,5 @@
-from AudioOutput import AudioOutput
-from gui import Player
+from audio_output import AudioOutput
+from player import Player
 import numpy as np
 
 FS = 44100
