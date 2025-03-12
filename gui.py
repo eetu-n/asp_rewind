@@ -5,14 +5,16 @@ import threading
 from AudioOutput import AudioOutput
 
 class Player:
-    def __init__(self, signal, output):
+    def __init__(self, signal, output, enable_gui = True):
         self.signal = signal
         self.play = False
         self.stopped = False
         self.pressed = threading.Event()
         self.output = output
         self.ot = threading.Thread(target=self.output_loop)
-        self.create_gui()
+        if enable_gui == True:
+            self.create_gui()
+        self.ot.start()
     
     def playPause(self):
         self.play = not self.play
@@ -21,7 +23,7 @@ class Player:
     def stop(self):
         self.stopped = True
         self.pressed.set()
-        #self.ot.join()
+        self.ot.join()
         self.root.quit()
         self.output.close()
 
@@ -45,5 +47,4 @@ class Player:
         self.playPause_button = ttk.Button(self.root,text='Play',command=self.playPause)
         self.exit_button.pack()
         self.playPause_button.pack()
-        self.ot.start()
         self.root.mainloop()
