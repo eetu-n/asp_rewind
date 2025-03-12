@@ -3,6 +3,16 @@ from tkinter import ttk
 import threading
 
 class Player:
+    """
+    Class for creating the player GUI, as well as handling commands for play, pause, rewind, fast-forward
+
+    Arguments:
+    signal:     The signal to play, see AudioOutput for format
+    output:     An AudioOutput object for output
+    enable_gui: Whether to draw the GUI
+
+    Only functions that need be called by externals are playPause and stop.
+    """
     def __init__(self, signal, output, enable_gui = True):
         self.signal = signal
         self.play = False
