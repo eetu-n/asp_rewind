@@ -6,6 +6,7 @@ import resampy as rs
 from speed import speed_function
 
 OUT_BLOCK_SIZE = 1024
+EFFECT_DURATION = 10
 
 class Processor():
     def __init__(self):
@@ -14,6 +15,7 @@ class Processor():
         self.current_sample = 0
         self.signal_fs = 0
         self.current_fs = 0
+        self.upcoming_fs = []
         
     def add_signal(self, signal_in):
         # Which one?
@@ -23,6 +25,18 @@ class Processor():
     def change_rate(self, fs):
         self.current_fs = fs
         if fs > 0:
+            self.forward = True
+        else:
+            self.forward = False
+
+    def update_rate(self):
+        if len(self.upcoming_fs) == 0:
+            return 
+        
+        self.current_fs = self.upcoming_fs[0]
+        self.upcoming_fs = self.upcoming_fs[1:]
+        
+        if self.current_fs > 0:
             self.forward = True
         else:
             self.forward = False
@@ -49,12 +63,21 @@ class Processor():
     def resample(self, signal_in):
         return rs.resample(signal_in, self.current_fs)
     
+    def set_speed(self, type="constant", ratio=2):
+        time = np.linspace(0, EFFECT_DURATION*OUT_BLOCK_SIZE, self.signal_fs)
+        speed = speed_function(time, type, ratio)
+        ## Something to translate speed func to block fs?
+        self.upcoming_fs = speed
+   
     # Returns the signal to be played (1024 samples)
     def play(self):
         # Check that there is signal to play, else return
         if self.current_sample < 0 or self.current_sample >= len(self.signal):
             return
         
+        # Update sampling rate
+        self.update_rate()
+
         signal_in = signal_in = self.get_block()
         signal_out = np.zeros(OUT_BLOCK_SIZE) # Fixed size
 
