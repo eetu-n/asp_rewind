@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-import numpy as np
 import threading
 import soundfile as sf
 from processor import Processor
@@ -16,15 +15,28 @@ samples = np.linspace(0, length, int(FS*length))
 signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
 
 class Player:
-    def __init__(self, signal, output):
+    """
+    Class for creating the player GUI, as well as handling commands for play, pause, rewind, fast-forward
+
+    Arguments:
+    signal:     The signal to play, see AudioOutput for format
+    output:     An AudioOutput object for output
+    enable_gui: Whether to draw the GUI
+
+    Only functions that need be called by externals are playPause and stop.
+    """
+    def __init__(self, signal, output, enable_gui = True):
         self.signal = signal
         self.play = False
         self.stopped = False
         self.pressed = threading.Event()
         self.output = output
         self.ot = threading.Thread(target=self.play_makso)
-        self.create_gui()
         self.processor = Processor()
+        self.create_gui()
+        if enable_gui == True:
+            self.create_gui()
+        self.ot.start()
     
     def playPause(self):
         self.play = not self.play
@@ -33,7 +45,7 @@ class Player:
     def stop(self):
         self.stopped = True
         self.pressed.set()
-        #self.ot.join()
+        self.ot.join()
         self.root.quit()
         self.output.close()
 
@@ -80,8 +92,4 @@ class Player:
         self.playPause_button = ttk.Button(self.root,text='Play',command=self.playPause)
         self.exit_button.pack()
         self.playPause_button.pack()
-        self.ot.start()
         self.root.mainloop()
-
-out = AudioOutput(FS, BS, CHANNELS)
-player = Player(signal, out)
