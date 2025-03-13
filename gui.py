@@ -2,10 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 import numpy as np
 import threading
+import soundfile as sf
+from processor import Processor
 
 from AudioOutput import AudioOutput
 
-FS = 44100
+FS = 48000
 BS = 1024
 CHANNELS = 1
 
@@ -20,8 +22,9 @@ class Player:
         self.stopped = False
         self.pressed = threading.Event()
         self.output = output
-        self.ot = threading.Thread(target=self.output_loop)
+        self.ot = threading.Thread(target=self.play_makso)
         self.create_gui()
+        self.processor = Processor()
     
     def playPause(self):
         self.play = not self.play
@@ -45,6 +48,29 @@ class Player:
             if self.stopped:
                 break
             self.pressed.clear()
+        self.stop()
+
+    def play_makso(self):
+        input, fs = sf.read("makso.wav")
+        print(fs)
+
+        if len(input.shape) > 1:  
+            input = np.mean(input, axis=1)
+        
+        self.processor = Processor()
+        self.processor.add_signal(input, fs)
+        
+        signal_out = self.processor.play()
+
+        while not len(signal_out) == 0:
+            if not self.play:
+                self.pressed.wait()
+            if self.play:
+                self.output.write(signal_out)
+            if self.stopped:
+                break 
+            signal_out = self.processor.play()
+            #self.pressed().clear()
         self.stop()
     
     def create_gui(self):
