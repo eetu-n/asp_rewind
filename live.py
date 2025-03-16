@@ -1,31 +1,23 @@
 from audio_output import AudioOutput
 from player import Player
+from processor import Processor
 import numpy as np
+import soundfile as sf
 
 FS = 44100
 BS = 1024
 CHANNELS = 1
 
-# For getting signal from Processor, recursive
-# Not used yet
-def play_processor(out, processor, player):
-    signal_out = processor.play()
-    if signal_out == []:
-        player.stop()
-        return
-    
-    if player.play:
-        out.write(signal_out)
+#length = 10
+#samples = np.linspace(0, length, int(FS*length))
+#signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
 
-    if player.done:
-        return
-    
-    output_loop(out, processor, player)   
+signal, fs = sf.read("makso.wav")
 
-length = 10
-samples = np.linspace(0, length, int(FS*length))
-signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
+if len(signal.shape) > 1:  
+    signal = np.mean(signal, axis=1)
 
-out = AudioOutput(FS, BS, CHANNELS)
-player = Player(signal, out)
+out = AudioOutput(fs, BS, CHANNELS)
+processor = Processor()
+player = Player(signal, out, processor)
 

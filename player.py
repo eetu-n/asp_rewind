@@ -1,18 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 import threading
-import soundfile as sf
 from processor import Processor
 
-from AudioOutput import AudioOutput
+from audio_output import AudioOutput
 
 FS = 48000
 BS = 1024
 CHANNELS = 1
-
-length = 10
-samples = np.linspace(0, length, int(FS*length))
-signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
 
 class Player:
     """
@@ -25,18 +20,18 @@ class Player:
 
     Only functions that need be called by externals are playPause and stop.
     """
-    def __init__(self, signal, output, enable_gui = True):
+    def __init__(self, signal, output, processor, enable_gui = True):
         self.signal = signal
         self.play = False
         self.stopped = False
         self.pressed = threading.Event()
         self.output = output
-        self.ot = threading.Thread(target=self.play_makso)
-        self.processor = Processor()
-        self.create_gui()
-        if enable_gui == True:
-            self.create_gui()
+        self.ot = threading.Thread(target=self.output_loop)
+        self.processor = processor
+        self.processor.add_signal(self.signal, self.output.fs)
         self.ot.start()
+        if enable_gui == True:
+            self.create_gui()     
     
     def playPause(self):
         self.play = not self.play
@@ -50,30 +45,7 @@ class Player:
         self.output.close()
 
     def output_loop(self):
-        n = 0
-        while n < len(self.signal):
-            if not self.play:
-                self.pressed.wait()
-            if self.play:
-                self.output.write(self.signal[n:n+self.output.block_length])
-                n += self.output.block_length
-            if self.stopped:
-                break
-            self.pressed.clear()
-        self.stop()
-
-    def play_makso(self):
-        input, fs = sf.read("makso.wav")
-        print(fs)
-
-        if len(input.shape) > 1:  
-            input = np.mean(input, axis=1)
-        
-        self.processor = Processor()
-        self.processor.add_signal(input, fs)
-        
         signal_out = self.processor.play()
-
         while not len(signal_out) == 0:
             if not self.play:
                 self.pressed.wait()
@@ -82,9 +54,9 @@ class Player:
             if self.stopped:
                 break 
             signal_out = self.processor.play()
-            #self.pressed().clear()
+            self.pressed.clear()
         self.stop()
-    
+        
     def create_gui(self):
         self.root = tk.Tk()
         self.root.title('Button Demo')
