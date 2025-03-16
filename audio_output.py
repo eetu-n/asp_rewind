@@ -35,7 +35,7 @@ class AudioOutput:
         block:  The audio to write, either in np.int16 or np.float64
         """
         if len(block) > self.block_size:
-            raise ValueError("Provided block is of length " + len(block) + "\nShould be <= " + self.block_size)
+            raise ValueError("Provided block is of length " + str(len(block)) + "\nShould be <= " + str(self.block_size))
         if type(block[0]) == np.float64:
             block = (block * 32767).astype(np.int16)
         self.stream.write(block.tobytes(), self.block_size)
