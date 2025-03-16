@@ -34,7 +34,7 @@ class Player:
         self.flutter = False
         self.rewind_speed = -3
         self.ff_speed = 3
-        self.ramp_time = 30
+        self.ramp_time = 1
         self.ot = threading.Thread(target=self.output_loop)
         self.processor = Processor(signal, output.fs, output.block_size)
         self.ot.start()
@@ -50,8 +50,8 @@ class Player:
             target_speed = 1
         self.processor.set_speed(target_speed, self.ramp, self.flutter, self.ramp_time)
 
-        if self.ramp:
-            time.sleep((self.ramp_time * self.output.block_size) / self.output.fs)
+        if self.ramp and self.play:
+            time.sleep(self.ramp_time)
 
         self.play = not self.play
 
@@ -66,7 +66,6 @@ class Player:
     def stop(self):
         self.stopped = True
         self.pressed.set()
-        self.ot.join()
         self.root.quit()
         self.output.close()
 

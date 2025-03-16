@@ -1,9 +1,10 @@
 import numpy as np
-import scipy.io.wavfile as wav
+import scipy.signal as sig
 import soundfile as sf
 from matplotlib import pyplot as plt
 from resampy import resample
 from speed import speed_function
+from math import ceil
 
 EFFECT_DURATION = 4*430 # blocks, approx 10 seconds
 
@@ -14,6 +15,7 @@ class Processor():
         self.upcoming_ratio = []
         self.signal = []
         self.block_size = block_size
+        self.prev_ratio = 0.3
         self.add_signal(signal, fs)
         
     def add_signal(self, signal_in, fs):
@@ -45,6 +47,7 @@ class Processor():
             return 
         
         # Update from upcoming ratios
+        self.prev_ratio = self.current_ratio
         self.current_ratio = self.upcoming_ratio[0]
         del self.upcoming_ratio[0]
         
@@ -74,11 +77,21 @@ class Processor():
 
         return self.signal[start_idx:end_idx]
 
-    def resample(self, signal_in):
-        return resample(signal_in, self.signal_fs, abs(int(self.signal_fs/self.current_ratio)))
+    def resample(self, signal_in, start_speed, end_speed):
+        num_samples = len(signal_in)
+        
+        time_original = np.linspace(0, num_samples - 1,num_samples)
+        playback_speed_curve = np.linspace(start_speed, end_speed, self.block_size)
+
+        time_warped = np.cumsum(1 / playback_speed_curve)
+        time_warped = time_warped / time_warped[-1] * num_samples
+
+        return np.interp(time_warped, time_original, signal_in)
     
-    def set_speed(self, ratio = 1, ramp = False, flutter = False, ramp_time = 30):
-        speed = speed_function(ratio, ramp, flutter, self.current_ratio, ramp_time = ramp_time, block_size = self.block_size)
+    def set_speed(self, ratio = 1, ramp = False, flutter = False, ramp_time = 0.5):
+        ramp_blocks = int(ceil((ramp_time * self.signal_fs) / self.block_size))
+
+        speed = speed_function(ratio, ramp, flutter, self.current_ratio, ramp_blocks = ramp_blocks, block_size = self.block_size)
         self.upcoming_ratio = speed.tolist()
    
     # Returns the signal to be played (1024 samples)
@@ -101,11 +114,18 @@ class Processor():
 
         # Change sample rate if needed
         if abs(self.current_ratio) != 1:
-           signal_in = self.resample(signal_in)
+            if self.upcoming_ratio != []:
+                signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio)
+            else:
+                signal_in = self.resample(signal_in, self.current_ratio, self.current_ratio)
+
 
         #print("Signal in after resample: ", len(signal_in))
 
         # Pad with zeros if ran out of signal
+        if len(signal_in) == self.block_size:
+            return signal_in
+
         signal_out[0:len(signal_in)] = signal_in[0:min(len(signal_in), self.block_size)]
 
         return signal_out

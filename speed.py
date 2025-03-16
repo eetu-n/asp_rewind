@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 time = np.linspace(0, 430*1024, 430)
 #print(time)
 
-def speed_function(ratio=2, ramp_on=False, flutter=False, prev_ratio=1, ramp_time=1, flutter_time=1, block_size = 1024):
+def speed_function(ratio=2, ramp_on=False, flutter=False, prev_ratio=1, ramp_blocks=1, flutter_time=1, block_size = 1024):
     """
     Generates a vector of sampling rate values for block processing.
 
@@ -15,14 +15,14 @@ def speed_function(ratio=2, ramp_on=False, flutter=False, prev_ratio=1, ramp_tim
     - flutter (Boolean, optional): Whether to vary the target ratio
     - prev_ratio (int, required if ramp=true): Where to ramp from
     """
-    total_time = ramp_time + flutter_time
+    total_time = ramp_blocks + flutter_time
     time = np.linspace(0, total_time*block_size, total_time)
     if not ramp_on:
         function = np.ones(total_time)*ratio
     else:
         ratio_diff = ratio - prev_ratio
         ramp_start = 0
-        ramp_end = time[ramp_time]
+        ramp_end = time[ramp_blocks]
         ramp = np.ones_like(time) * ratio
         function = np.where((time >= ramp_start) & (time <= ramp_end), (time / ramp_end) * ratio_diff + prev_ratio, ramp)
 
