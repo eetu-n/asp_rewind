@@ -56,12 +56,22 @@ class Player:
             signal_out = self.processor.play()
             self.pressed.clear()
         self.stop()
-        
+    
+    def rewind(self):
+        return
+    
+    def fast_forward(self):
+        return
+    
     def create_gui(self):
         self.root = tk.Tk()
         self.root.title('Button Demo')
         self.exit_button = ttk.Button(self.root, text='Exit', command=self.stop)
         self.playPause_button = ttk.Button(self.root,text='Play',command=self.playPause)
+        self.rewind_button = ttk.Button(self.root,text='Rewind',command=self.rewind)
+        self.ff_button = ttk.Button(self.root,text='Fast Forward',command=self.fast_forward)
         self.exit_button.pack()
         self.playPause_button.pack()
+        self.rewind_button.pack()
+        self.ff_button.pack()
         self.root.mainloop()
