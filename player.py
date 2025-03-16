@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 from processor import Processor
+import numpy as np
+import soundfile as sf
 
 from audio_output import AudioOutput
 
@@ -29,6 +31,8 @@ class Player:
         self.ot = threading.Thread(target=self.output_loop)
         self.processor = Processor(signal, output.fs)
         self.ot.start()
+        self.write_to_file = False
+        self.played_data = []
         if enable_gui == True:
             self.create_gui()     
     
@@ -54,6 +58,8 @@ class Player:
             if self.stopped:
                 break 
             signal_out = self.processor.play()
+            if self.write_to_file:
+                self.played_data = np.append(self.played_data, signal_out)
             self.pressed.clear()
         self.stop()
     
@@ -66,14 +72,35 @@ class Player:
         self.processor.set_speed("constant", 2)
         self.play = True
         self.pressed.set()
+
+    def save_file(self):
+        if self.write_to_file:
+            print(len(self.played_data))
+            sf.write("saved_makso.wav", self.played_data, self.output.fs)
+            self.played_data = []
+        else:
+            self.write_to_file = True
     
     def create_gui(self):
         self.root = tk.Tk()
         self.root.title('Button Demo')
+        self.root.geometry("450x350")
+
         self.exit_button = ttk.Button(self.root, text='Exit', command=self.stop)
+        self.exit_button.pack(side=tk.BOTTOM)
+
         self.playPause_button = ttk.Button(self.root,text='Play',command=self.playPause)
+        self.playPause_button.pack(side=tk.RIGHT)
+
         self.rewind_button = ttk.Button(self.root,text='Rewind',command=self.rewind)
+        self.rewind_button.pack(side=tk.RIGHT)
+
         self.ff_button = ttk.Button(self.root,text='Fast Forward',command=self.fast_forward)
+        self.ff_button.pack(side=tk.RIGHT)
+
+        self.save_button = ttk.Button(self.root,text='Write to file',command=self.save_file)
+        self.save_button.pack(side=tk.LEFT)
+
         self.exit_button.pack()
         self.playPause_button.pack()
         self.rewind_button.pack()
