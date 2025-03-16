@@ -4,45 +4,36 @@ from matplotlib import pyplot as plt
 time = np.linspace(0, 430*1024, 430)
 #print(time)
 
-def speed_function(time, type="constant", ratio=2):
+def speed_function(ratio=2, ramp_on=False, flutter=False, prev_ratio=1, ramp_time=1, flutter_time=1, block_size = 1024):
     """
     Generates a vector of sampling rate values for block processing.
 
     Parameters:
     - time (numpy array): Time values over which the speed function is computed.
-    - type (str, optional): Type of speed variation.
-        - "constant": A constant speed multiplier.
-        - "ramp": A trapezoidal speed profile with linear acceleration and deceleration.
-        - "flutter": A sinusoidal variation in speed.
     - ratio (float, optional): Scaling factor for the speed, used for "constant" and "ramp" modes.
+    - ramp (Boolean, optional): Whether to have a ramp to target ratio
+    - flutter (Boolean, optional): Whether to vary the target ratio
+    - prev_ratio (int, required if ramp=true): Where to ramp from
     """
-    if type=="constant":
-        function = np.ones_like(time)*ratio
-    if type=="ramp":
-        slope_length = time[-1]//5
-        print(slope_length)
-        rise_start = 0
-        rise_end = slope_length
-        ramp = np.ones_like(time)
-        ramp = np.where((time >= rise_start) & (time <= rise_end), (time - 0) / slope_length, ramp)
+    total_time = ramp_time + flutter_time
+    time = np.linspace(0, total_time*block_size, total_time)
+    if not ramp_on:
+        function = np.ones(total_time)*ratio
+    else:
+        ratio_diff = ratio - prev_ratio
+        ramp_start = 0
+        ramp_end = time[ramp_time]
+        ramp = np.ones_like(time) * ratio
+        function = np.where((time >= ramp_start) & (time <= ramp_end), (time / ramp_end) * ratio_diff + prev_ratio, ramp)
 
-        # Plateau (1)
-        flat_start = slope_length
-        flat_end = time[-1] - slope_length
-        ramp = np.where((time > flat_start) & (time < flat_end), 1, ramp)
-
-        # Falling edge (1 to 0)
-        fall_start = flat_end
-        fall_end = time[-1]
-        ramp = np.where((time >= fall_start) & (time <= fall_end), 1 - (time - fall_start) / slope_length, ramp)
-        function = (1+ramp*(abs(ratio)-1)) * np.sign(ratio)
-
-    if type == "flutter":
+    if flutter:
         function = 1+ 0.5 * np.sin(2 * np.pi * 0.2 * time)  # Speed oscillates
 
+    function = np.where((function >= 0) & (function <= 0.1), 0.1, function)
+    function = np.where((function <= 0) & (function >= -0.1), -0.1, function)
     # Plot the function
     #plt.plot(time, function)
     #plt.show()
     return function
 
-_ = speed_function(time, type="ramp", ratio=-3)
+_ = speed_function()

@@ -5,15 +5,15 @@ from matplotlib import pyplot as plt
 from resampy import resample
 from speed import speed_function
 
-OUT_BLOCK_SIZE = 1024
 EFFECT_DURATION = 4*430 # blocks, approx 10 seconds
 
 class Processor():
-    def __init__(self, signal = [0], fs = 48000):
+    def __init__(self, signal = [0], fs = 48000, block_size=512):
         self.forward = True
         self.current_sample = 0
         self.upcoming_ratio = []
         self.signal = []
+        self.block_size = block_size
         self.add_signal(signal, fs)
         
     def add_signal(self, signal_in, fs):
@@ -55,7 +55,7 @@ class Processor():
             self.forward = False
 
     def get_input_sample_number(self):
-        return int(abs(self.current_ratio) * OUT_BLOCK_SIZE)
+        return int(abs(self.current_ratio) * self.block_size)
 
     # Get one block of signal
     def get_block(self):
@@ -77,9 +77,8 @@ class Processor():
     def resample(self, signal_in):
         return resample(signal_in, self.signal_fs, abs(int(self.signal_fs/self.current_ratio)))
     
-    def set_speed(self, type="constant", ratio=-2):
-        time = np.linspace(0, EFFECT_DURATION*OUT_BLOCK_SIZE, EFFECT_DURATION)
-        speed = speed_function(time, type, ratio)
+    def set_speed(self, ratio = 1, ramp = False, flutter = False, ramp_time = 30):
+        speed = speed_function(ratio, ramp, flutter, self.current_ratio, ramp_time = ramp_time, block_size = self.block_size)
         self.upcoming_ratio = speed.tolist()
    
     # Returns the signal to be played (1024 samples)
@@ -94,7 +93,7 @@ class Processor():
 
         signal_in = self.get_block()
         #print("Signal in before resample: ", len(signal_in))
-        signal_out = np.zeros(OUT_BLOCK_SIZE) # Fixed size
+        signal_out = np.zeros(self.block_size) # Fixed size
 
         # Flip signal if going backwards
         if not self.forward:
@@ -107,7 +106,7 @@ class Processor():
         #print("Signal in after resample: ", len(signal_in))
 
         # Pad with zeros if ran out of signal
-        signal_out[0:len(signal_in)] = signal_in[0:min(len(signal_in), OUT_BLOCK_SIZE)]
+        signal_out[0:len(signal_in)] = signal_in[0:min(len(signal_in), self.block_size)]
 
         return signal_out
     
