@@ -34,7 +34,7 @@ class Player:
         self.flutter = False
         self.rewind_speed = -3
         self.ff_speed = 3
-        self.ramp_time = 1
+        self.ramp_time = 0.5
         self.ot = threading.Thread(target=self.output_loop)
         self.processor = Processor(signal, output.fs, output.block_size)
         self.ot.start()
@@ -70,15 +70,14 @@ class Player:
         self.output.close()
 
     def output_loop(self):
-        signal_out = self.processor.play()
-        while not len(signal_out) == 0:
+        while True:
             if not self.play:
                 self.pressed.wait()
             if self.play:
+                signal_out = self.processor.play()
                 self.output.write(signal_out)
             if self.stopped:
                 break 
-            signal_out = self.processor.play()
             if self.write_to_file:
                 self.played_data = np.append(self.played_data, signal_out)
             self.pressed.clear()

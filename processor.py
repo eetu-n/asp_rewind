@@ -15,7 +15,7 @@ class Processor():
         self.upcoming_ratio = []
         self.signal = []
         self.block_size = block_size
-        self.prev_ratio = 0.3
+        self.prev_ratio = 0
         self.add_signal(signal, fs)
         
     def add_signal(self, signal_in, fs):
@@ -23,7 +23,7 @@ class Processor():
         #self.signal = np.concatenate([self.signal, signal_in],0)
         self.signal = np.append(self.signal, signal_in)
         self.signal_fs = fs
-        self.current_ratio = 1
+        self.current_ratio = 0
 
         # FOR TESTING PURPOSES:
         #self.forward = False
@@ -80,11 +80,16 @@ class Processor():
     def resample(self, signal_in, start_speed, end_speed):
         num_samples = len(signal_in)
         
-        time_original = np.linspace(0, num_samples - 1,num_samples)
-        playback_speed_curve = np.linspace(start_speed, end_speed, self.block_size)
+        time_original = np.linspace(0, num_samples, num_samples)
+
+        if start_speed == end_speed:
+            return resample(signal_in, self.signal_fs, abs(int(self.signal_fs/self.current_ratio)))
+
+        playback_speed_curve = np.linspace(end_speed, start_speed, self.block_size)
 
         time_warped = np.cumsum(1 / playback_speed_curve)
-        time_warped = time_warped / time_warped[-1] * num_samples
+        #time_warped = time_warped / time_warped[-1] * (num_samples - 1)
+        time_warped = (time_warped - time_warped[0]) / (time_warped[-1] - time_warped[0]) * (num_samples - 1)
 
         return np.interp(time_warped, time_original, signal_in)
     
@@ -114,7 +119,7 @@ class Processor():
 
         # Change sample rate if needed
         if abs(self.current_ratio) != 1:
-            if self.upcoming_ratio != []:
+            if len(self.upcoming_ratio) != 0:
                 signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio)
             else:
                 signal_in = self.resample(signal_in, self.current_ratio, self.current_ratio)
@@ -129,9 +134,3 @@ class Processor():
         signal_out[0:len(signal_in)] = signal_in[0:min(len(signal_in), self.block_size)]
 
         return signal_out
-    
-            
-
-        
-
-    
