@@ -9,13 +9,12 @@ OUT_BLOCK_SIZE = 1024
 EFFECT_DURATION = 4*430 # blocks, approx 10 seconds
 
 class Processor():
-    def __init__(self):
-        self.signal = []
+    def __init__(self, signal = [0], fs = 48000):
         self.forward = True
         self.current_sample = 0
-        self.signal_fs = 0
-        self.current_ratio = 1
         self.upcoming_ratio = []
+        self.signal = []
+        self.add_signal(signal, fs)
         
     def add_signal(self, signal_in, fs):
         # Which one?
