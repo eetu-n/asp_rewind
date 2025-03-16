@@ -15,7 +15,8 @@ CHANNELS = 1
 signal, fs = sf.read("makso.wav")
 
 if len(signal.shape) > 1:  
-    signal = np.mean(signal, axis=1)
+    #signal = np.mean(signal, axis=1)
+    signal = signal[:,0]
 
 out = AudioOutput(fs, BS, CHANNELS)
 player = Player(signal, out)
