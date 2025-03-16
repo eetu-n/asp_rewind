@@ -18,6 +18,5 @@ if len(signal.shape) > 1:
     signal = np.mean(signal, axis=1)
 
 out = AudioOutput(fs, BS, CHANNELS)
-processor = Processor()
-player = Player(signal, out, processor)
+player = Player(signal, out)
 

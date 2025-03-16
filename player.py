@@ -20,20 +20,20 @@ class Player:
 
     Only functions that need be called by externals are playPause and stop.
     """
-    def __init__(self, signal, output, processor, enable_gui = True):
+    def __init__(self, signal, output, enable_gui = True):
         self.signal = signal
         self.play = False
         self.stopped = False
         self.pressed = threading.Event()
         self.output = output
         self.ot = threading.Thread(target=self.output_loop)
-        self.processor = processor
-        self.processor.add_signal(self.signal, self.output.fs)
+        self.processor = Processor(signal, output.fs)
         self.ot.start()
         if enable_gui == True:
             self.create_gui()     
     
     def playPause(self):
+        self.processor.set_speed("constant", 1)
         self.play = not self.play
         self.pressed.set()
     
@@ -58,10 +58,14 @@ class Player:
         self.stop()
     
     def rewind(self):
-        return
+        self.processor.set_speed("constant", -2)
+        self.play = True
+        self.pressed.set()
     
     def fast_forward(self):
-        return
+        self.processor.set_speed("constant", 2)
+        self.play = True
+        self.pressed.set()
     
     def create_gui(self):
         self.root = tk.Tk()
