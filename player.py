@@ -119,11 +119,14 @@ class Player:
     
     def create_gui(self):
         self.root = tk.Tk()
-        self.root.title('Button Demo')
-        self.root.geometry("450x350")
+        self.root.title('Fast Forward / Rewind Demo')
+        self.root.geometry("400x100")
 
         self.exit_button = ttk.Button(self.root, text='Exit', command=self.stop)
         self.exit_button.pack(side=tk.BOTTOM)
+
+        self.save_button = ttk.Button(self.root,text='Write to file',command=self.save_file)
+        self.save_button.pack(side=tk.BOTTOM)
 
         self.playPause_button = ttk.Button(self.root,text='Play',command=self.playPause)
         self.playPause_button.pack(side=tk.RIGHT)
@@ -134,13 +137,11 @@ class Player:
         self.ff_button = ttk.Button(self.root,text='Fast Forward',command=self.fast_forward)
         self.ff_button.pack(side=tk.RIGHT)
 
-        self.flutter_button = ttk.Button(self.root,text='Flutter On',command=self.flutter_toggle)
-        self.flutter_button.pack(side=tk.RIGHT)
-
-        self.save_button = ttk.Button(self.root,text='Write to file',command=self.save_file)
-        self.save_button.pack(side=tk.LEFT)
-
         self.ramp_button = ttk.Button(self.root,text='Ramp On',command=self.ramp_toggle)
+        self.ramp_button.pack(side=tk.LEFT)
+
+        self.flutter_button = ttk.Button(self.root,text='Flutter On',command=self.flutter_toggle)
+        self.flutter_button.pack(side=tk.LEFT)
 
         self.exit_button.pack()
         self.playPause_button.pack()
