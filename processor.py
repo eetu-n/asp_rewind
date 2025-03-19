@@ -1,8 +1,4 @@
 import numpy as np
-import scipy.signal as sig
-import soundfile as sf
-from matplotlib import pyplot as plt
-from resampy import resample
 from speed import speed_function
 from math import ceil
 
@@ -83,12 +79,12 @@ class Processor():
         time_original = np.linspace(0, num_samples, num_samples)
 
         if start_speed == end_speed:
-            return resample(signal_in, self.signal_fs, abs(int(self.signal_fs/self.current_ratio)))
+            new_time = np.linspace(0, num_samples, self.block_size)
+            return np.interp(new_time, time_original, signal_in)
 
         playback_speed_curve = np.linspace(end_speed, start_speed, self.block_size)
 
         time_warped = np.cumsum(1 / playback_speed_curve)
-        #time_warped = time_warped / time_warped[-1] * (num_samples - 1)
         time_warped = (time_warped - time_warped[0]) / (time_warped[-1] - time_warped[0]) * (num_samples - 1)
 
         return np.interp(time_warped, time_original, signal_in)
