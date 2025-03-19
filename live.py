@@ -21,4 +21,3 @@ if len(signal.shape) > 1:
 
 out = AudioOutput(fs, BS, CHANNELS)
 player = Player(signal, out)
-

@@ -27,7 +27,7 @@ def speed_function(ratio=2, ramp_on=False, flutter=False, prev_ratio=1, ramp_blo
         function = np.where((time >= ramp_start) & (time <= ramp_end), (time / ramp_end) * ratio_diff + prev_ratio, ramp)
 
     if flutter:
-        function = 1+ 0.5 * np.sin(2 * np.pi * 0.2 * time)  # Speed oscillates
+        function += 0.05 * np.sin(2 * np.pi * 0.2 * time)  # Speed oscillates
 
     function = np.where((function >= 0) & (function <= 0.1), 0.1, function)
     function = np.where((function <= 0) & (function >= -0.1), -0.1, function)
