@@ -1,5 +1,6 @@
 import numpy as np
 from speed import speed_function
+import scipy.signal as sig
 from math import ceil
 
 EFFECT_DURATION = 4*430 # blocks, approx 10 seconds
@@ -94,6 +95,11 @@ class Processor():
 
         speed = speed_function(ratio, ramp, flutter, self.current_ratio, ramp_blocks = ramp_blocks, block_size = self.block_size)
         self.upcoming_ratio = speed.tolist()
+    
+    def aa_filter(self, input, ratio):
+        sos = sig.butter(4, ratio, output='sos')
+        return sig.sosfilt(sos, input)
+
    
     # Returns the signal to be played (1024 samples)
     def play(self):
@@ -115,13 +121,12 @@ class Processor():
 
         # Change sample rate if needed
         if abs(self.current_ratio) != 1:
+            if (abs(self.current_ratio) >= 1):
+                signal_in = self.aa_filter(signal_in, 1/self.current_ratio)
             if len(self.upcoming_ratio) != 0:
                 signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio)
             else:
                 signal_in = self.resample(signal_in, self.current_ratio, self.current_ratio)
-
-
-        #print("Signal in after resample: ", len(signal_in))
 
         # Pad with zeros if ran out of signal
         if len(signal_in) == self.block_size:

@@ -32,8 +32,8 @@ class Player:
         self.output = output
         self.ramp = False
         self.flutter = False
-        self.rewind_speed = -3
-        self.ff_speed = 3
+        self.rewind_speed = -2
+        self.ff_speed = 2
         self.ramp_time = 0.5
         self.ot = threading.Thread(target=self.output_loop)
         self.processor = Processor(signal, output.fs, output.block_size)

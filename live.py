@@ -2,16 +2,18 @@ from audio_output import AudioOutput
 from player import Player
 from processor import Processor
 import numpy as np
+import scipy.signal as sig
 import soundfile as sf
 
 FS = 44100
 BS = 1024
 CHANNELS = 1
 
-#length = 10
-#samples = np.linspace(0, length, int(FS*length))
-#signal = 0.5 * np.sin(2 * np.pi * 1000 * samples)
-#fs = FS
+length = 60
+samples = np.linspace(0, length, int(FS*length))
+signal = 0.5 * np.sin(2 * np.pi * 700 * samples)
+#signal = 0.5 * sig.square(2 * np.pi * 220 * samples, 0.5)
+fs = FS
 
 signal, fs = sf.read("makso.wav")
 
