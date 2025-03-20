@@ -32,6 +32,7 @@ class Player:
         self.output = output
         self.ramp = False
         self.flutter = False
+        self.anti_alias = True
         self.rewind_speed = -2
         self.ff_speed = 2
         self.ramp_time = 0.5
@@ -74,7 +75,7 @@ class Player:
             if not self.play:
                 self.pressed.wait()
             if self.play:
-                signal_out = self.processor.play()
+                signal_out = self.processor.play(anti_alias = self.anti_alias)
                 self.output.write(signal_out)
             if self.stopped:
                 break 
@@ -116,6 +117,13 @@ class Player:
             self.flutter_button.config(text="Flutter Off")
         else:
             self.flutter_button.config(text="Flutter On")
+
+    def anti_alias_toggle(self):
+        self.anti_alias = not self.anti_alias
+        if self.anti_alias:
+            self.anti_alias_button.config(text="Anti-Alias Off")
+        else:
+            self.anti_alias_button.config(text="Anti-Alias On")
     
     def create_gui(self):
         self.root = tk.Tk()
@@ -142,6 +150,9 @@ class Player:
 
         self.flutter_button = ttk.Button(self.root,text='Flutter On',command=self.flutter_toggle)
         self.flutter_button.pack(side=tk.LEFT)
+
+        self.anti_alias_button = ttk.Button(self.root,text='Anti-Alias Off',command=self.anti_alias_toggle)
+        self.anti_alias_button.pack(side=tk.LEFT)
 
         self.exit_button.pack()
         self.playPause_button.pack()
