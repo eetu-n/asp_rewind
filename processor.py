@@ -102,7 +102,7 @@ class Processor():
 
    
     # Returns the signal to be played (1024 samples)
-    def play(self):
+    def play(self, anti_alias = True):
         # Check that there is signal to play, else return
         if self.current_sample < 0 or self.current_sample >= len(self.signal):
             print("No signal left to play")
@@ -121,7 +121,7 @@ class Processor():
 
         # Change sample rate if needed
         if abs(self.current_ratio) != 1:
-            if (abs(self.current_ratio) >= 1):
+            if (abs(self.current_ratio) > 1 and self.anti_alias):
                 signal_in = self.aa_filter(signal_in, 1/self.current_ratio)
             if len(self.upcoming_ratio) != 0:
                 signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio)
