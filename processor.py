@@ -110,7 +110,7 @@ class Processor():
     def set_speed(self, ratio = 1, ramp = False, flutter = False, ramp_time = 0.5):
         ramp_blocks = int(ceil((ramp_time * self.signal_fs) / self.block_size))
 
-        speed = speed_function(ratio, ramp, flutter, self.current_ratio, ramp_blocks = ramp_blocks, block_size = self.block_size)
+        speed = speed_function(ratio, ramp, flutter, prev_ratio = self.current_ratio, ramp_blocks = ramp_blocks, block_size = self.block_size)
         self.upcoming_ratio = speed.tolist()
     
     def aa_filter(self, input, ratio):

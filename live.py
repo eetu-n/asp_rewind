@@ -6,20 +6,23 @@ import scipy.signal as sig
 import soundfile as sf
 
 FS = 44100
-BS = 1024
+#FS = 1600
+BS = 512
 CHANNELS = 1
+
+f = 900
 
 length = 60
 samples = np.linspace(0, length, int(FS*length))
-signal = 0.5 * np.sin(2 * np.pi * 700 * samples)
-#signal = 0.5 * sig.square(2 * np.pi * 220 * samples, 0.5)
+signal = 0.5 * np.sin(2 * np.pi * f * samples)
+#signal = 0.5 * sig.square(2 * np.pi * f * samples, 0.5)
 fs = FS
 
-signal, fs = sf.read("makso.wav")
+signal, fs = sf.read("intro3.wav")
 
 if len(signal.shape) > 1:
     #signal = np.mean(signal, axis=1)
     signal = signal[:,0]
 
 out = AudioOutput(fs, BS, CHANNELS)
-player = Player(signal, out)
+player = Player(signal, out, fast_forward_speed = 2, ramp_time = 1)
