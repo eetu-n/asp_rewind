@@ -121,7 +121,7 @@ class Processor():
 
         # Change sample rate if needed
         if abs(self.current_ratio) != 1:
-            if (abs(self.current_ratio) > 1 and self.anti_alias):
+            if (abs(self.current_ratio) > 1 and anti_alias):
                 signal_in = self.aa_filter(signal_in, 1/self.current_ratio)
             if len(self.upcoming_ratio) != 0:
                 signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio)
