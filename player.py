@@ -24,7 +24,7 @@ class Player:
 
     Only functions that need be called by externals are playPause and stop.
     """
-    def __init__(self, signal, output, enable_gui = True):
+    def __init__(self, signal, output, enable_gui = True, fast_forward_speed = 2):
         self.signal = signal
         self.play = False
         self.stopped = False
@@ -33,8 +33,8 @@ class Player:
         self.ramp = False
         self.flutter = False
         self.anti_alias = True
-        self.rewind_speed = -2
-        self.ff_speed = 2
+        self.rewind_speed = -fast_forward_speed
+        self.ff_speed = fast_forward_speed
         self.ramp_time = 0.5
         self.ot = threading.Thread(target=self.output_loop)
         self.processor = Processor(signal, output.fs, output.block_size)
