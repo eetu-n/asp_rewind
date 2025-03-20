@@ -33,6 +33,7 @@ class Player:
         self.ramp = False
         self.flutter = False
         self.anti_alias = True
+        self.smooth_change = True
         self.rewind_speed = -fast_forward_speed
         self.ff_speed = fast_forward_speed
         self.ramp_time = 0.5
@@ -64,6 +65,11 @@ class Player:
 
         self.pressed.set()
     
+    def force_pause(self):
+        self.processor.set_speed(0, ramp=False, flutter=False)
+        self.play = False
+        self.playPause_button.config(text="Play")
+    
     def stop(self):
         self.stopped = True
         self.pressed.set()
@@ -75,8 +81,15 @@ class Player:
             if not self.play:
                 self.pressed.wait()
             if self.play:
-                signal_out = self.processor.play(anti_alias = self.anti_alias)
-                self.output.write(signal_out)
+                try:
+                    signal_out = self.processor.play(anti_alias = self.anti_alias, smooth_changes = self.smooth_change)
+                except EOFError:
+                    print("No data to play!")
+                    self.force_pause()
+                    self.pressed.clear()
+                    continue
+                else:
+                    self.output.write(signal_out)
             if self.stopped:
                 break 
             if self.write_to_file:
@@ -101,6 +114,7 @@ class Player:
             print(len(self.played_data))
             sf.write("saved_makso.wav", self.played_data, self.output.fs)
             self.played_data = []
+            self.write_to_file = False
         else:
             self.write_to_file = True
     
@@ -124,6 +138,13 @@ class Player:
             self.anti_alias_button.config(text="Anti-Alias Off")
         else:
             self.anti_alias_button.config(text="Anti-Alias On")
+
+    def smooth_change_toggle(self):
+        self.smooth_change = not self.smooth_change
+        if self.smooth_change:
+            self.smooth_change_button.config(text="Smooth Changes Off")
+        else:
+            self.smooth_change_button.config(text="Smooth Changes On")
     
     def create_gui(self):
         self.root = tk.Tk()
@@ -154,9 +175,17 @@ class Player:
         self.anti_alias_button = ttk.Button(self.root,text='Anti-Alias Off',command=self.anti_alias_toggle)
         self.anti_alias_button.pack(side=tk.LEFT)
 
+        self.smooth_change_button = ttk.Button(self.root,text='Smooth Changes Off',command=self.smooth_change_toggle)
+        self.smooth_change_button.pack(side=tk.LEFT)
+
+        #slider = ttk.Scale(root, from_=0, to=100, orient='horizontal', variable = )
+
         self.exit_button.pack()
         self.playPause_button.pack()
         self.rewind_button.pack()
         self.ff_button.pack()
         self.ramp_button.pack()
+
+        self.root.wm_attributes("-type", "dialog")
+
         self.root.mainloop()

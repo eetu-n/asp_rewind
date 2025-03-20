@@ -1,6 +1,7 @@
 import numpy as np
 from speed import speed_function
 import scipy.signal as sig
+from scipy.interpolate import interp1d
 from math import ceil
 
 EFFECT_DURATION = 4*430 # blocks, approx 10 seconds
@@ -66,29 +67,45 @@ class Processor():
         
         # Update start and end indices      
         if self.forward:
-            end_idx = min(start_idx + num_samples, len(self.signal)-1)
+            end_idx = start_idx + num_samples
             self.current_sample = end_idx
         else:
-            start_idx = max(end_idx - num_samples, 0)
+            start_idx = end_idx - num_samples
             self.current_sample = start_idx
+
+        if start_idx < 0:
+            self.upcoming_ratio = []
+            self.prev_ratio = 0
+            self.current_ratio = 0
+            self.current_sample = 0
+            raise EOFError("No signal to play")
+        if end_idx > len(self.signal):
+            self.upcoming_ratio = []
+            self.prev_ratio = 0
+            self.current_ratio = 0
+            self.current_sample = len(self.signal)
+            raise EOFError("No signal to play")
 
         return self.signal[start_idx:end_idx]
 
-    def resample(self, signal_in, start_speed, end_speed):
+    def resample(self, signal_in, start_speed, end_speed, interp_type='linear'):
         num_samples = len(signal_in)
         
         time_original = np.linspace(0, num_samples, num_samples)
 
         if start_speed == end_speed:
             new_time = np.linspace(0, num_samples, self.block_size)
-            return np.interp(new_time, time_original, signal_in)
+            interp_func = interp1d(time_original, signal_in, kind=interp_type, fill_value="extrapolate")
+            return interp_func(new_time)
 
         playback_speed_curve = np.linspace(end_speed, start_speed, self.block_size)
 
         time_warped = np.cumsum(1 / playback_speed_curve)
         time_warped = (time_warped - time_warped[0]) / (time_warped[-1] - time_warped[0]) * (num_samples - 1)
 
-        return np.interp(time_warped, time_original, signal_in)
+        interp_func = interp1d(time_original, signal_in, kind=interp_type, fill_value="extrapolate")
+
+        return interp_func(time_warped)
     
     def set_speed(self, ratio = 1, ramp = False, flutter = False, ramp_time = 0.5):
         ramp_blocks = int(ceil((ramp_time * self.signal_fs) / self.block_size))
@@ -97,22 +114,20 @@ class Processor():
         self.upcoming_ratio = speed.tolist()
     
     def aa_filter(self, input, ratio):
-        sos = sig.butter(4, ratio, output='sos')
-        return sig.sosfilt(sos, input)
+        #sos = sig.butter(4, ratio, output='sos')
+        sos = sig.ellip(6, 1, 60, ratio, output="sos")
+        return sig.sosfilt(sos, input) * 0.9
 
    
     # Returns the signal to be played (1024 samples)
-    def play(self, anti_alias = True):
+    def play(self, anti_alias = True, smooth_changes = True, interp_type='linear'):
         # Check that there is signal to play, else return
-        if self.current_sample < 0 or self.current_sample >= len(self.signal):
-            print("No signal left to play")
-            return []
         
         # Update sampling rate
         self.update_rate()
 
         signal_in = self.get_block()
-        #print("Signal in before resample: ", len(signal_in))
+
         signal_out = np.zeros(self.block_size) # Fixed size
 
         # Flip signal if going backwards
@@ -122,11 +137,11 @@ class Processor():
         # Change sample rate if needed
         if abs(self.current_ratio) != 1:
             if (abs(self.current_ratio) > 1 and anti_alias):
-                signal_in = self.aa_filter(signal_in, 1/self.current_ratio)
-            if len(self.upcoming_ratio) != 0:
-                signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio)
+                signal_in = self.aa_filter(signal_in, abs(1/self.current_ratio))
+            if len(self.upcoming_ratio) != 0 and smooth_changes:
+                signal_in = self.resample(signal_in, self.prev_ratio, self.current_ratio, interp_type=interp_type)
             else:
-                signal_in = self.resample(signal_in, self.current_ratio, self.current_ratio)
+                signal_in = self.resample(signal_in, self.current_ratio, self.current_ratio, interp_type=interp_type)
 
         # Pad with zeros if ran out of signal
         if len(signal_in) == self.block_size:
