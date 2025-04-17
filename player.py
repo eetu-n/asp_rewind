@@ -112,7 +112,7 @@ class Player:
     def save_file(self):
         if self.write_to_file:
             print(len(self.played_data))
-            sf.write("saved_makso.wav", self.played_data, self.output.fs)
+            sf.write("./audio/output.wav", self.played_data, self.output.fs)
             self.played_data = []
             self.write_to_file = False
         else:

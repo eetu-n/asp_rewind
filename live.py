@@ -5,12 +5,12 @@ import numpy as np
 import scipy.signal as sig
 import soundfile as sf
 
-FS = 44100
-#FS = 1600
-BS = 512
+#FS = 44100
+FS = 8000
+BS = 2048
 CHANNELS = 1
 
-f = 900
+f = 3500
 
 length = 60
 samples = np.linspace(0, length, int(FS*length))
@@ -18,7 +18,7 @@ signal = 0.5 * np.sin(2 * np.pi * f * samples)
 #signal = 0.5 * sig.square(2 * np.pi * f * samples, 0.5)
 fs = FS
 
-signal, fs = sf.read("intro3.wav")
+#signal, fs = sf.read("makso.wav")
 
 if len(signal.shape) > 1:
     #signal = np.mean(signal, axis=1)

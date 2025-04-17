@@ -115,7 +115,7 @@ class Processor():
     
     def aa_filter(self, input, ratio):
         #sos = sig.butter(4, ratio, output='sos')
-        sos = sig.ellip(6, 1, 60, ratio, output="sos")
+        sos = sig.ellip(6, 5, 60, ratio, output="sos")
         return sig.sosfilt(sos, input) * 0.9
 
    
